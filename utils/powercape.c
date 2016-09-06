@@ -371,7 +371,7 @@ void show_usage( char *progname )
     fprintf( stderr, "      -r --read           Read and display cape RTC value.\n" );
     fprintf( stderr, "      -s --set            Set system time from cape RTC.\n" );
     fprintf( stderr, "      -w --write          Write cape RTC from system time.\n" );
-    fpirntf( stderr, "      -cn --charge n      Set charge rate where n= 1, 2, or 3");
+    fprintf( stderr, "      -cn --charge n      Set charge rate where n= 1, 2, or 3");
     exit( 1 );
 }
 
