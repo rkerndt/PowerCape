@@ -356,7 +356,7 @@ int cape_show_cape_info( void )
 int cape_charge_rate(int rate)
 {
     //TODO: add in capability checks as done in show info
-     return register_write(REG_I2C_ICHARGE, (unsigned char rate));
+     return register_write(REG_I2C_ICHARGE, (unsigned char) rate);
 }
 
 void show_usage( char *progname )
@@ -447,7 +447,7 @@ void parse( int argc, char *argv[] )
             {
                 operation = OP_CHARGE;
                 operation_arg = atoi(optarg);
-                if ((operation_arg < 1) || (operaton_arg > 3))
+                if ((operation_arg < 1) || (operation_arg > 3))
                 {
                     operation = OP_NONE;
                     show_usage( argv[ 0 ] );
