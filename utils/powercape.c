@@ -28,7 +28,7 @@ typedef enum {
 } op_type;
 
 op_type operation = OP_NONE;
-
+int operation_arg = 0;
 int i2c_bus = 1;
 int handle;
 
@@ -352,13 +352,17 @@ int cape_show_cape_info( void )
     return 0;
 }
 
+int cape_charge_rate(int rate)
+{
+    //TODO: add in capability checks as done in show info
+     return register_write(REG_I2C_ICHARGE, (unsigned char rate));
+}
 
 void show_usage( char *progname )
 {
     fprintf( stderr, "Usage: %s [OPTION] \n", progname );
     fprintf( stderr, "   Options:\n" );
     fprintf( stderr, "      -h --help           Show usage.\n" );
-    fprintf( stderr, "      -a --address <addr> Use I2C <addr> instead of 0x%02X.\n", AVR_ADDRESS );
     fprintf( stderr, "      -i --info           Show PowerCape info.\n" );
     fprintf( stderr, "      -b --boot           Enter bootloader.\n" );
     fprintf( stderr, "      -q --query          Query reason for power-on.\n" );
@@ -366,6 +370,7 @@ void show_usage( char *progname )
     fprintf( stderr, "      -r --read           Read and display cape RTC value.\n" );
     fprintf( stderr, "      -s --set            Set system time from cape RTC.\n" );
     fprintf( stderr, "      -w --write          Write cape RTC from system time.\n" );
+    fpirntf( stderr, "      -cn --charge n      Set charge rate where n= 1, 2, or 3");
     exit( 1 );
 }
 
@@ -383,11 +388,12 @@ void parse( int argc, char *argv[] )
             { "read",       0, 0, 'r' },
             { "set",        0, 0, 's' },
             { "write",      0, 0, 'w' },
+            { "charge",     1, 0, 'c' },
             { NULL,         0, 0, 0 },
         };
         int c;
 
-        c = getopt_long( argc, argv, "ihbqrsw", lopts, NULL );
+        c = getopt_long( argc, argv, "ihbqrswc:", lopts, NULL );
 
         if( c == -1 )
             break;
@@ -434,6 +440,17 @@ void parse( int argc, char *argv[] )
             {
                 operation = OP_NONE;
                 show_usage( argv[ 0 ] );
+                break;
+            }
+            case 'c':
+            {
+                operation = OP_CHARGE;
+                operation_arg = atoi(optarg);
+                if ((operation_arg < 1) || (operaton_arg > 3))
+                {
+                    operation = OP_NONE;
+                    show_usage( argv[ 0 ] );
+                }
                 break;
             }
         }
@@ -515,7 +532,12 @@ int main( int argc, char *argv[] )
             rc = cape_write_rtc();
             break;
         }
-        
+
+        case OP_CHARGE:
+        {
+            rc = cape_charge_rate(operation_arg);
+            break;
+        }
         default:
         case OP_NONE:
         {
