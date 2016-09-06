@@ -24,7 +24,8 @@ typedef enum {
     OP_READ_RTC,
     OP_SET_SYSTIME,
     OP_WRITE_RTC,
-    OP_INFO
+    OP_INFO,
+    OP_CHARGE
 } op_type;
 
 op_type operation = OP_NONE;
