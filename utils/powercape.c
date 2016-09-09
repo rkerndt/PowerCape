@@ -356,10 +356,10 @@ int cape_show_cape_info( void )
 int cape_charge_rate(int rate)
 {
     //TODO: add in capability checks as done in show info
-     #return register_write(REG_I2C_ICHARGE, (unsigned char) rate);
+     //return register_write(REG_I2C_ICHARGE, (unsigned char) rate);
 
      // try a smbus write byte data command
-     return i2c_smbus_write_data(handle, REG_I2C_ICHARGE, (unsigned char) rate);
+     return i2c_smbus_write_byte_data(handle, REG_I2C_ICHARGE, (unsigned char) rate);
 }
 
 void show_usage( char *progname )
