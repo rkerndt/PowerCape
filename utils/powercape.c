@@ -17,10 +17,10 @@
 #define INA_ADDRESS         0x40
 
 // avr defined battery charge rates
-#define CHRAGE_RATE_ZERO         // disables battery charging
-#define CHARGE_RATE_LOW          // maximum 1/3 amp
-#define CHARGE_RATE_MED          // maximum 2/3 amp
-#define CHARGE_RATE_HIGH         // maximum 1 amp
+#define CHRAGE_RATE_ZERO    0x00     // disables battery charging
+#define CHARGE_RATE_LOW     0x01     // maximum 1/3 amp
+#define CHARGE_RATE_MED     0x02     // maximum 2/3 amp
+#define CHARGE_RATE_HIGH    0x03     // maximum 1 amp
 
 typedef enum {
     OP_NONE,
@@ -369,7 +369,7 @@ int set_charge_rate(int rate)
          rc = i2c_smbus_write_byte_data(handle, REG_I2C_ICHARGE, (unsigned char) rate);
          if (rc == -1)
          {
-            fprintf(stderr, "Failed to read charge rate: (%d) %s", errno, strerror(errno))
+            fprintf(stderr, "Failed to read charge rate: (%d) %s", errno, strerror(errno));
          }
      }
      else
