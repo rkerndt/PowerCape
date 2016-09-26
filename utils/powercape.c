@@ -116,7 +116,7 @@ int cape_initialize(int i2c_bus)
 {
     int rc = 0;
     pc.i2c_bus = i2c_bus;
-    pc.handle = NULL;
+    pc.handle = 0;
     pc.status = CAPE_OK;
     char filename[I2C_MAX_DEVICE_NAME];
     snprintf(filename, I2C_MAX_DEVICE_NAME, "/dev/i2c-%d", i2c_bus);
@@ -133,9 +133,9 @@ int cape_initialize(int i2c_bus)
 int cape_close(void)
 {
     int rc = 0;
-    if (pc.handler != NULL)
+    if (pc.handle != NULL)
     {
-        rc = close(pc.handler);
+        rc = close(pc.handle);
         if (rc == -1)
         {
             fprintf(stderr, "Error closing handler: (%d) %s", errno, strerror(errno));
