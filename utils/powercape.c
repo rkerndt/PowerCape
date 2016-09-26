@@ -114,7 +114,7 @@ int register32_write( unsigned char reg, unsigned int data )
 
 int cape_initialize(int i2c_bus)
 {
-    rc = 0;
+    int rc = 0;
     pc.i2c_bus = i2c_bus;
     pc.handler = NULL;
     pc.status = CAPE_OK;
@@ -132,14 +132,16 @@ int cape_initialize(int i2c_bus)
 
 int cape_close(void)
 {
+    int rc = 0;
     if (pc.handler != NULL)
     {
         rc = close(pc.handler);
         if (rc == -1)
         {
-            fprintf(stderr, "Error closing handler: (%d) %s", errno, strerror(errno))
+            fprintf(stderr, "Error closing handler: (%d) %s", errno, strerror(errno));
         }
     }
+    return rc;
 }
 
 int cape_enter_bootloader( void )

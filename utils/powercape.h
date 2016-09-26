@@ -42,7 +42,7 @@
 // structure to hold data fields needed by powercape routines
 typedef struct _powercape {
     int i2c_bus;
-    int handle;
+    int handler;
     int status;
 } powercape;
 
