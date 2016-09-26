@@ -16,6 +16,11 @@
 #define AVR_ADDRESS         0x21
 #define INA_ADDRESS         0x40
 
+// avr defined battery charge rates
+#define CHRAGE_RATE_ZERO         // disables battery charging
+#define CHARGE_RATE_LOW          // maximum 1/3 amp
+#define CHARGE_RATE_MED          // maximum 2/3 amp
+#define CHARGE_RATE_HIGH         // maximum 1 amp
 
 typedef enum {
     OP_NONE,
@@ -353,13 +358,26 @@ int cape_show_cape_info( void )
     return 0;
 }
 
-int cape_charge_rate(int rate)
+int set_charge_rate(int rate)
 {
     //TODO: add in capability checks as done in show info
-     //return register_write(REG_I2C_ICHARGE, (unsigned char) rate);
-
-     // try a smbus write byte data command
-     return i2c_smbus_write_byte_data(handle, REG_I2C_ICHARGE, (unsigned char) rate);
+     int rc = 0;
+     if ((rate == CHARGE_RATE_LOW) ||
+         (rate == CHARGE_RATE_MED) ||
+         (rate == CHARGE_RATE_HIGH))
+     {
+         rc = i2c_smbus_write_byte_data(handle, REG_I2C_ICHARGE, (unsigned char) rate);
+         if (rc == -1)
+         {
+            fprintf(stderr, "Failed to read charge rate: (%d) %s", errno, strerror(errno))
+         }
+     }
+     else
+     {
+        fprintf(stderr, "Rate %d is out of range\n", rate);
+        rc = -1;
+     }
+     return rc;
 }
 
 void show_usage( char *progname )
