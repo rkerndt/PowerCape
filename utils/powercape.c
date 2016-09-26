@@ -557,7 +557,7 @@ int main( int argc, char *argv[] )
 
         case OP_CHARGE:
         {
-            rc = cape_charge_rate(operation_arg);
+            rc = set_charge_rate(operation_arg);
             break;
         }
         default:
