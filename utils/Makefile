@@ -3,7 +3,7 @@
 default: ina219 power
 
 powercape.o: powercape.c powercape.h
-    gcc -c powercape.c
+	gcc -c powercape.c
 
 ina219:	ina219.c
 	gcc -o ina219 ina219.c
