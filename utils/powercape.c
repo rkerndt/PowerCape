@@ -116,11 +116,11 @@ int cape_initialize(int i2c_bus)
 {
     int rc = 0;
     pc.i2c_bus = i2c_bus;
-    pc.handler = NULL;
+    pc.handle = NULL;
     pc.status = CAPE_OK;
     char filename[I2C_MAX_DEVICE_NAME];
-    snprintf( filename, I2C_MAX_DEVICE_NAME, "/dev/i2c-%d", i2c_bus );
-    pc.handle = open( filename, O_RDWR );
+    snprintf(filename, I2C_MAX_DEVICE_NAME, "/dev/i2c-%d", i2c_bus);
+    pc.handle = open(filename, O_RDWR);
     if (pc.handle == -1)
     {
         fprintf(stderr, "Failed to open %s: (%d) %s", filename, errno, strerror(errno));
