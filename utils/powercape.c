@@ -1,60 +1,21 @@
-#include <unistd.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <errno.h>
-#include <endian.h>
-#include <string.h>
-#include <time.h>
-#include <getopt.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <sys/ioctl.h>
-#include <fcntl.h>
-#include <linux/i2c-dev.h>
-#include "../avr/registers.h"
+#include "powercape.h"
 
-#define AVR_ADDRESS         0x21
-#define INA_ADDRESS         0x40
+// misc constants
+#define I2C_MAX_DEVICE_NAME 0x0C     // maximum length of i2c filename
 
-// avr defined battery charge rates
-#define CHARGE_RATE_ZERO    0x00     // disables battery charging
-#define CHARGE_RATE_LOW     0x01     // maximum 1/3 amp
-#define CHARGE_RATE_MED     0x02     // maximum 2/3 amp
-#define CHARGE_RATE_HIGH    0x03     // maximum 1 amp
-
-// avr battery max charge time
-#define CHARGE_TIME_MIN     0x03     // charge stops after 3 hours
-#define CHARGE_TIME_MAX     0x0A     // charge stops after 10 hours
-
-typedef enum {
-    OP_NONE,
-    OP_BOOT,
-    OP_QUERY,
-    OP_READ_RTC,
-    OP_SET_SYSTIME,
-    OP_WRITE_RTC,
-    OP_INFO,
-    OP_CHARGE
-    OP_CHARGE_TIME
-} op_type;
-
-op_type operation = OP_NONE;
-int operation_arg = 0;
-int i2c_bus = 1;
-int handle;
-
+// global struct to hold needed powercap data
+static powercape pc;
 
 void msleep( int msecs )
 {
     usleep( msecs * 1000 );
 }
 
-
 int i2c_read( void *buf, int len )
 {
     int rc = 0;
 
-    if ( read( handle, buf, len ) != len )
+    if ( read( pc.handle, buf, len ) != len )
     {
         printf( "I2C read failed: %s\n", strerror( errno ) );
         rc = -1;
@@ -68,7 +29,7 @@ int i2c_write( void *buf, int len )
 {
     int rc = 0;
     
-    if ( write( handle, buf, len ) != len ) 
+    if ( write( pc.handle, buf, len ) != len )
     {
         printf( "I2C write failed: %s\n", strerror( errno ) );
         rc = -1;
@@ -151,6 +112,35 @@ int register32_write( unsigned char reg, unsigned int data )
     return rc;
 }
 
+int cape_initialize(int i2c_bus)
+{
+    rc = 0;
+    pc.i2c_bus = i2c_bus;
+    pc.handler = NULL;
+    pc.status = CAPE_OK;
+    char filename[I2C_MAX_DEVICE_NAME];
+    snprintf( filename, I2C_MAX_DEVICE_NAME, "/dev/i2c-%d", i2c_bus );
+    pc.handle = open( filename, O_RDWR );
+    if (pc.handle == -1)
+    {
+        fprintf(stderr, "Failed to open %s: (%d) %s", filename, errno, strerror(errno));
+        rc = -1;
+        pc.status = CAPE_FAIL;
+    }
+    return rc;
+}
+
+int cape_close(void)
+{
+    if (pc.handler != NULL)
+    {
+        rc = close(pc.handler);
+        if (rc == -1)
+        {
+            fprintf(stderr, "Error closing handler: (%d) %s", errno, strerror(errno))
+        }
+    }
+}
 
 int cape_enter_bootloader( void )
 {
@@ -371,7 +361,7 @@ int set_charge_rate(int rate)
          (rate == CHARGE_RATE_MED) ||
          (rate == CHARGE_RATE_HIGH))
      {
-         rc = i2c_smbus_write_byte_data(handle, REG_I2C_ICHARGE, (unsigned char) rate);
+         rc = i2c_smbus_write_byte_data(pc.handle, REG_I2C_ICHARGE, (unsigned char) rate);
          if (rc == -1)
          {
             fprintf(stderr, "Failed to read charge rate: (%d) %s", errno, strerror(errno));
@@ -390,7 +380,7 @@ int set_charge_time(int time)
     int rc = 0;
     if ((time >= CHARGE_RATE_LOW) && (time <= CHARGE_TIME_MAX))
     {
-        rc = i2c_smbus_write_byte_data(handle, REG_I2C_TCHARGE, (unsigned char) time);
+        rc = i2c_smbus_write_byte_data(pc.handle, REG_I2C_TCHARGE, (unsigned char) time);
         if (rc == -1)
         {
             fprintf(stderr, "Failed to set charge rate to %d: (%d) %s", time, errno, strerror(errno));
@@ -400,212 +390,6 @@ int set_charge_time(int time)
     {
         fprintf(stderr, "Charge time %d is out of range\n", time);
     }
-    return rc;
-}
-
-void show_usage( char *progname )
-{
-    fprintf( stderr, "Usage: %s [OPTION] \n", progname );
-    fprintf( stderr, "   Options:\n" );
-    fprintf( stderr, "      -h --help           Show usage.\n" );
-    fprintf( stderr, "      -i --info           Show PowerCape info.\n" );
-    fprintf( stderr, "      -b --boot           Enter bootloader.\n" );
-    fprintf( stderr, "      -q --query          Query reason for power-on.\n" );
-    fprintf( stderr, "                          Output can be TIMEOUT, PGOOD, BUTTON, or OPTO.\n" );
-    fprintf( stderr, "      -r --read           Read and display cape RTC value.\n" );
-    fprintf( stderr, "      -s --set            Set system time from cape RTC.\n" );
-    fprintf( stderr, "      -w --write          Write cape RTC from system time.\n" );
-    fprintf( stderr, "      -cn --charge n      Set charge rate where n= 1, 2, or 3\n");
-    fprintf( stderr, "      -tn --charge-time n Set charge time where n = 3-10 hours\n")
-    exit( 1 );
-}
-
-
-void parse( int argc, char *argv[] )
-{
-    while( 1 )
-    {
-        static const struct option lopts[] =
-        {
-            { "help",       0, 0, 'h' },
-            { "boot",       0, 0, 'b' },
-            { "info",       0, 0, 'i' },
-            { "query",      0, 0, 'q' },
-            { "read",       0, 0, 'r' },
-            { "set",        0, 0, 's' },
-            { "write",      0, 0, 'w' },
-            { "charge",     1, 0, 'c' },
-            { "charge-time" 1, 0, 't' },
-            { NULL,         0, 0, 0 },
-        };
-        int c;
-
-        c = getopt_long( argc, argv, "ihbqrswc:t:", lopts, NULL );
-
-        if( c == -1 )
-            break;
-
-        switch( c )
-        {
-            case 'b':
-            {
-                operation = OP_BOOT;
-                break;
-            }
-
-            case 'i':
-            {
-                operation = OP_INFO;
-                break;
-            }
-
-            case 'q':
-            {
-                operation = OP_QUERY;
-                break;
-            }
-            
-            case 'r':
-            {
-                operation = OP_READ_RTC;
-                break;
-            }
-            
-            case 's':
-            {
-                operation = OP_SET_SYSTIME;
-                break;
-            }
-            
-            case 'w':
-            {
-                operation = OP_WRITE_RTC;
-                break;
-            }
-            
-            case 'h':
-            {
-                operation = OP_NONE;
-                show_usage( argv[ 0 ] );
-                break;
-            }
-            case 'c':
-            {
-                operation = OP_CHARGE;
-                operation_arg = atoi(optarg);
-                if ((operation_arg < CHARGE_RATE_LOW) || (operation_arg > CHARGE_RATE_HIGH))
-                {
-                    operation = OP_NONE;
-                    show_usage( argv[ 0 ] );
-                }
-                break;
-            }
-            case 't':
-            {
-                operation = OP_CHARGE_TIME;
-                operation_arg = atoi(optarg);
-                if ((operation_arg < CHARGE_TIME_MIN) || (operation_arg > CHARGE_TIME_MAX))
-                {
-                    operation = OP_NONE;
-                    show_usage( argv[ 0] );
-                }
-            }
-        }
-    }
-}
-
-
-int main( int argc, char *argv[] )
-{
-    int rc = 0;
-    char filename[ 20 ];
-
-    if ( argc == 1 )
-    {
-        show_usage( argv[ 0 ] );
-    }
-
-    parse( argc, argv );
-
-    snprintf( filename, 19, "/dev/i2c-%d", i2c_bus );
-    handle = open( filename, O_RDWR );
-    if ( handle < 0 ) 
-    {
-        fprintf( stderr, "Error opening device %s: %s\n", filename, strerror( errno ) );
-        exit( 1 );
-    }
-
-    if ( ioctl( handle, I2C_SLAVE, AVR_ADDRESS ) < 0 ) 
-    {
-        fprintf( stderr, "IOCTL Error: %s\n", strerror( errno ) );
-        exit( 1 );
-    }
-
-    switch ( operation )
-    {
-        case OP_INFO:
-        {
-            rc = cape_show_cape_info();
-            break;
-        }
-
-        case OP_QUERY:
-        {
-            rc = cape_query_reason_power_on();
-            break;
-        }
-
-        case OP_BOOT:
-        {
-            rc = cape_enter_bootloader();
-            break;
-        }
-
-        case OP_READ_RTC:
-        {
-            rc = cape_read_rtc( NULL );
-            break;
-        }
-
-        case OP_SET_SYSTIME:
-        {
-            struct timeval t;
-            
-            rc = cape_read_rtc( &t.tv_sec );
-            if ( rc == 0 )
-            {
-                t.tv_usec = 0;
-                rc = settimeofday( &t, NULL);
-                if ( rc != 0 )
-                {
-                    fprintf( stderr, "Error: %s\n", strerror( errno ) );
-                }
-            }
-            break;
-        }
-        
-        case OP_WRITE_RTC:
-        {
-            rc = cape_write_rtc();
-            break;
-        }
-
-        case OP_CHARGE:
-        {
-            rc = set_charge_rate(operation_arg);
-            break;
-        }
-        case OP_CHARGE_TIME:
-            rc = set_charge_time(operation_arg);
-            break;
-        default:
-        case OP_NONE:
-        {
-            break;
-        }
-    }
-
-    close( handle );
     return rc;
 }
 
