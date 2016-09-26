@@ -17,10 +17,14 @@
 #define INA_ADDRESS         0x40
 
 // avr defined battery charge rates
-#define CHRAGE_RATE_ZERO    0x00     // disables battery charging
+#define CHARGE_RATE_ZERO    0x00     // disables battery charging
 #define CHARGE_RATE_LOW     0x01     // maximum 1/3 amp
 #define CHARGE_RATE_MED     0x02     // maximum 2/3 amp
 #define CHARGE_RATE_HIGH    0x03     // maximum 1 amp
+
+// avr battery max charge time
+#define CHARGE_TIME_MIN     0x03     // charge stops after 3 hours
+#define CHARGE_TIME_MAX     0x0A     // charge stops after 10 hours
 
 typedef enum {
     OP_NONE,
@@ -31,6 +35,7 @@ typedef enum {
     OP_WRITE_RTC,
     OP_INFO,
     OP_CHARGE
+    OP_CHARGE_TIME
 } op_type;
 
 op_type operation = OP_NONE;
@@ -380,6 +385,24 @@ int set_charge_rate(int rate)
      return rc;
 }
 
+int set_charge_time(int time)
+{
+    int rc = 0;
+    if ((time >= CHARGE_RATE_LOW) && (time <= CHARGE_TIME_MAX))
+    {
+        rc = i2c_smbus_write_byte_data(handle, REG_I2C_TCHARGE, (unsigned char) time);
+        if (rc == -1)
+        {
+            fprintf(stderr, "Failed to set charge rate to %d: (%d) %s", time, errno, strerror(errno));
+        }
+    }
+    else
+    {
+        fprintf(stderr, "Charge time %d is out of range\n", time);
+    }
+    return rc;
+}
+
 void show_usage( char *progname )
 {
     fprintf( stderr, "Usage: %s [OPTION] \n", progname );
@@ -393,6 +416,7 @@ void show_usage( char *progname )
     fprintf( stderr, "      -s --set            Set system time from cape RTC.\n" );
     fprintf( stderr, "      -w --write          Write cape RTC from system time.\n" );
     fprintf( stderr, "      -cn --charge n      Set charge rate where n= 1, 2, or 3\n");
+    fprintf( stderr, "      -tn --charge-time n Set charge time where n = 3-10 hours\n")
     exit( 1 );
 }
 
@@ -411,11 +435,12 @@ void parse( int argc, char *argv[] )
             { "set",        0, 0, 's' },
             { "write",      0, 0, 'w' },
             { "charge",     1, 0, 'c' },
+            { "charge-time" 1, 0, 't' },
             { NULL,         0, 0, 0 },
         };
         int c;
 
-        c = getopt_long( argc, argv, "ihbqrswc:", lopts, NULL );
+        c = getopt_long( argc, argv, "ihbqrswc:t:", lopts, NULL );
 
         if( c == -1 )
             break;
@@ -468,12 +493,22 @@ void parse( int argc, char *argv[] )
             {
                 operation = OP_CHARGE;
                 operation_arg = atoi(optarg);
-                if ((operation_arg < 1) || (operation_arg > 3))
+                if ((operation_arg < CHARGE_RATE_LOW) || (operation_arg > CHARGE_RATE_HIGH))
                 {
                     operation = OP_NONE;
                     show_usage( argv[ 0 ] );
                 }
                 break;
+            }
+            case 't':
+            {
+                operation = OP_CHARGE_TIME;
+                operation_arg = atoi(optarg);
+                if ((operation_arg < CHARGE_TIME_MIN) || (operation_arg > CHARGE_TIME_MAX))
+                {
+                    operation = OP_NONE;
+                    show_usage( argv[ 0] );
+                }
             }
         }
     }
@@ -560,6 +595,9 @@ int main( int argc, char *argv[] )
             rc = set_charge_rate(operation_arg);
             break;
         }
+        case OP_CHARGE_TIME:
+            rc = set_charge_time(operation_arg);
+            break;
         default:
         case OP_NONE:
         {
