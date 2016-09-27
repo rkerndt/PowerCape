@@ -385,7 +385,7 @@ int cape_charge_time(unsigned char time)
     int rc = 0;
     if ((time >= CHARGE_RATE_LOW) && (time <= CHARGE_TIME_MAX))
     {
-        rc = register_read(REG_I2C_TCHARGE, time);
+        rc = register_write(REG_I2C_TCHARGE, time);
     }
     else
     {
