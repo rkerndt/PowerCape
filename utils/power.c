@@ -34,7 +34,7 @@ void show_usage( char *progname )
     fprintf( stderr, "      -s --set            Set system time from cape RTC.\n" );
     fprintf( stderr, "      -w --write          Write cape RTC from system time.\n" );
     fprintf( stderr, "      -cn --charge n      Set charge rate where n= 1, 2, or 3\n");
-    fprintf( stderr, "      -tn --charge-time n Set charge time where n = 3-10 hours\n")
+    fprintf( stderr, "      -tn --charge-time n Set charge time where n = 3-10 hours\n");
     exit( 1 );
 }
 
@@ -45,16 +45,16 @@ void parse( int argc, char *argv[] )
     {
         static const struct option lopts[] =
         {
-            { "help",       0, 0, 'h' },
-            { "boot",       0, 0, 'b' },
-            { "info",       0, 0, 'i' },
-            { "query",      0, 0, 'q' },
-            { "read",       0, 0, 'r' },
-            { "set",        0, 0, 's' },
-            { "write",      0, 0, 'w' },
-            { "charge",     1, 0, 'c' },
-            { "charge-time" 1, 0, 't' },
-            { NULL,         0, 0, 0 },
+            { "help",        0, 0, 'h' },
+            { "boot",        0, 0, 'b' },
+            { "info",        0, 0, 'i' },
+            { "query",       0, 0, 'q' },
+            { "read",        0, 0, 'r' },
+            { "set",         0, 0, 's' },
+            { "write",       0, 0, 'w' },
+            { "charge",      1, 0, 'c' },
+            { "charge-time", 1, 0, 't' },
+            { NULL,          0, 0, 0 },
         };
         int c;
 
@@ -214,6 +214,6 @@ int main( int argc, char *argv[] )
         }
     }
 
-    close( handle );
+    cape_close();
     return rc;
 }
