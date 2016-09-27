@@ -14,8 +14,8 @@ typedef enum {
     OP_SET_SYSTIME,
     OP_WRITE_RTC,
     OP_INFO,
-    OP_CHARGE
-    OP_CHARGE_TIME
+    OP_CHARGE,
+    OP_CHARGE_TIME,
 } op_type;
 
 static op_type operation = OP_NONE;
@@ -145,16 +145,9 @@ int main( int argc, char *argv[] )
 
     parse( argc, argv );
 
-    if ( handle < 0 )
+    if (cape_initialize(CAPE_I2C_BUS, AVR_ADDRESS) < 0)
     {
-        fprintf( stderr, "Error opening device %s: %s\n", filename, strerror( errno ) );
-        exit( 1 );
-    }
-
-    if ( ioctl( handle, I2C_SLAVE, AVR_ADDRESS ) < 0 )
-    {
-        fprintf( stderr, "IOCTL Error: %s\n", strerror( errno ) );
-        exit( 1 );
+        exit(1)
     }
 
     switch ( operation )

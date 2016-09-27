@@ -112,7 +112,7 @@ int register32_write( unsigned char reg, unsigned int data )
     return rc;
 }
 
-int cape_initialize(int i2c_bus)
+int cape_initialize(int i2c_bus, int avr_address)
 {
     int rc = 0;
     pc.i2c_bus = i2c_bus;
@@ -127,6 +127,13 @@ int cape_initialize(int i2c_bus)
         rc = -1;
         pc.status = CAPE_FAIL;
     }
+
+    if ( ioctl( handle, I2C_SLAVE, avr_address ) < 0 )
+    {
+        fprintf(stderr, "IOCTL Error: %s\n", strerror(errno));
+        rc = -1;
+    }
+
     return rc;
 }
 

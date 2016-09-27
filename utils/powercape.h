@@ -18,7 +18,7 @@
 #include <linux/i2c-dev.h>
 #include "../avr/registers.h"
 
-
+#define CAPE_I2C_BUS        0x01
 #define AVR_ADDRESS         0x21
 #define INA_ADDRESS         0x40
 
@@ -47,7 +47,7 @@ typedef struct _powercape {
 } powercape;
 
 
-int cape_initialize(int i2c_bus);
+int cape_initialize(int i2c_bus, int avr_address);
 
 int cape_close(void);
 
