@@ -128,7 +128,7 @@ int cape_initialize(int i2c_bus, int avr_address)
         pc.status = CAPE_FAIL;
     }
 
-    if ( ioctl( handle, I2C_SLAVE, avr_address ) < 0 )
+    if (ioctl(pc.handle, I2C_SLAVE, avr_address) < 0)
     {
         fprintf(stderr, "IOCTL Error: %s\n", strerror(errno));
         rc = -1;
@@ -140,7 +140,7 @@ int cape_initialize(int i2c_bus, int avr_address)
 int cape_close(void)
 {
     int rc = 0;
-    if (pc.handle != NULL)
+    if (pc.handle != 0)
     {
         rc = close(pc.handle);
         if (rc == -1)
