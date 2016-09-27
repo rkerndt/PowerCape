@@ -17,7 +17,7 @@ int i2c_read( void *buf, int len )
 
     if ( read( pc.handle, buf, len ) != len )
     {
-        printf( "I2C read failed: %s\n", strerror( errno ) );
+        fprintf(stderr, "I2C read failed: %s\n", strerror( errno ) );
         rc = -1;
     }
 
@@ -31,7 +31,7 @@ int i2c_write( void *buf, int len )
     
     if ( write( pc.handle, buf, len ) != len )
     {
-        printf( "I2C write failed: %s\n", strerror( errno ) );
+        fprintf(stderr, "I2C write failed: %s\n", strerror( errno ) );
         rc = -1;
     }
     
@@ -362,7 +362,7 @@ int cape_show_cape_info( void )
     return 0;
 }
 
-int set_charge_rate(int rate)
+int cape_charge_rate(unsigned char rate)
 {
     //TODO: add in capability checks as done in show info
      int rc = 0;
@@ -370,11 +370,7 @@ int set_charge_rate(int rate)
          (rate == CHARGE_RATE_MED) ||
          (rate == CHARGE_RATE_HIGH))
      {
-         rc = i2c_smbus_write_byte_data(pc.handle, REG_I2C_ICHARGE, (unsigned char) rate);
-         if (rc == -1)
-         {
-            fprintf(stderr, "Failed to read charge rate: (%d) %s", errno, strerror(errno));
-         }
+         rc = register_write(REG_I2C_ICHARGE, &rate);
      }
      else
      {
@@ -384,20 +380,57 @@ int set_charge_rate(int rate)
      return rc;
 }
 
-int set_charge_time(int time)
+int cape_charge_time(unsigned char time)
 {
     int rc = 0;
     if ((time >= CHARGE_RATE_LOW) && (time <= CHARGE_TIME_MAX))
     {
-        rc = i2c_smbus_write_byte_data(pc.handle, REG_I2C_TCHARGE, (unsigned char) time);
-        if (rc == -1)
-        {
-            fprintf(stderr, "Failed to set charge rate to %d: (%d) %s", time, errno, strerror(errno));
-        }
+        rc = register_read(REG_I2C_TCHARGE, &time);
     }
     else
     {
         fprintf(stderr, "Charge time %d is out of range\n", time);
+    }
+    return rc;
+}
+
+int cape_power_down(unsigned char seconds)
+{
+    int rc = 0;
+    if ((seconds >= POWER_DOWN_MIN_SEC) && (seconds <= POWER_DOWN_MAX_SEC))
+    {
+        rc = register_write(REG_WDT_STOP, &seconds);
+    }
+    else
+    {
+        fprintf(stderr, "Power down seconds %d is out of range\n", seconds);
+    }
+    return rc;
+}
+
+int cape_power_on(int seconds)
+{
+    int rc = 0;
+    if ((seconds >= POWER_ON_MIN_SEC) && (seconds <= POWER_ON_MAX_SEC))
+    {
+        // convert to hours, minutes, seconds
+        unsigned char hour = (unsigned char) seconds / 3600;
+        unsigned char min = (unsigned char) (seconds % 3600) / 60;
+        unsigned char sec = (unsigned char) (seconds % 60);
+
+        rc = register_write(REG_RESTART_HOURS, &hour);
+        if (rc != -1)
+        {
+            rc = register_write(REG_RESTART_MINUTES, &min);
+        }
+        if (rc != -1)
+        {
+            rc = register_write(REG_RESTART_SECONDS, &sec);
+        }
+    }
+    else
+    {
+        fprintf(stderr, "Power on seconds %d is out of range\n", seconds);
     }
     return rc;
 }

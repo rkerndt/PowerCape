@@ -38,6 +38,12 @@
 #define CAPE_FAIL           0x02
 #define CAPE_ERROR          0x03
 
+#define POWER_DOWN_DEFAULT_SEC 1
+#define POWER_DOWN_MIN_SEC     1
+#define POWER_DOWN_MAX_SEC     255
+
+#define POWER_ON_MIN_SEC       0
+#define POWER_ON_MAX_SEC       22047555
 
 // structure to hold data fields needed by powercape routines
 typedef struct _powercape {
@@ -61,8 +67,12 @@ int cape_query_reason_power_on(void);
 
 int cape_show_cape_info(void);
 
-int set_charge_rate(int rate);
+int cape_charge_rate(unsigned char rate);
 
-int set_charge_time(int time);
+int cape_charge_time(unsigned char time);
+
+int cape_power_down(unsigned char seconds);
+
+int cape_power_on(int seconds);
 
 #endif

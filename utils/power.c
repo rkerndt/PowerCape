@@ -16,6 +16,8 @@ typedef enum {
     OP_INFO,
     OP_CHARGE,
     OP_CHARGE_TIME,
+    OP_POWER_DOWN,
+    OP_POWER_ON,
 } op_type;
 
 static op_type operation = OP_NONE;
@@ -35,9 +37,10 @@ void show_usage( char *progname )
     fprintf( stderr, "      -w --write          Write cape RTC from system time.\n" );
     fprintf( stderr, "      -cn --charge n      Set charge rate where n= 1, 2, or 3\n");
     fprintf( stderr, "      -tn --charge-time n Set charge time where n = 3-10 hours\n");
+    fprintf( stderr, "      -pn --power-down n  Power down after n seconds where n=0-255");
+    fprintf( stderr, "      -Pn --power-on n    Power on after n seconds where n=0-22047555 (~255 days)")
     exit( 1 );
 }
-
 
 void parse( int argc, char *argv[] )
 {
@@ -54,11 +57,13 @@ void parse( int argc, char *argv[] )
             { "write",       0, 0, 'w' },
             { "charge",      1, 0, 'c' },
             { "charge-time", 1, 0, 't' },
+            { "power-down",  1, 0, 'p' },
+            { "power-on",    1, 0, 'P' },
             { NULL,          0, 0, 0 },
         };
         int c;
 
-        c = getopt_long( argc, argv, "ihbqrswc:t:", lopts, NULL );
+        c = getopt_long( argc, argv, "ihbqrswc:t:p::P:", lopts, NULL );
 
         if( c == -1 )
             break;
@@ -127,6 +132,36 @@ void parse( int argc, char *argv[] )
                     operation = OP_NONE;
                     show_usage( argv[ 0] );
                 }
+                break;
+            }
+            case 'p':
+            {
+                operation = OP_POWER_DOWN;
+                if (optarg != NULL)
+                {
+                    operation_arg = atoi(optarg);
+                    if ((operation_arg < POWER_DOWN_MIN_SEC) || (operation_arg > POWER_DOWN_MAX_SEC))
+                    {
+                        operation = OP_NONE;
+                        show_usage(argv[0]);
+                    }
+                }
+                else
+                {
+                    operation_arg = POWER_DOWN_DEFAULT_SEC;
+                }
+                break;
+            }
+            case 'P':
+            {
+                operation = OP_POWER_ON;
+                operation_arg = atoi(optarg);
+                if ((opweration_arg < POWER_ON_MIN_SEC) || (operation_arg > POWER_DOWN_MAX_SEC))
+                {
+                    operation = OP_NONE;
+                    show_usage(argv[0]);
+                }
+                break;
             }
         }
     }
@@ -201,12 +236,24 @@ int main( int argc, char *argv[] )
 
         case OP_CHARGE:
         {
-            rc = set_charge_rate(operation_arg);
+            rc = cape_charge_rate(operation_arg);
             break;
         }
         case OP_CHARGE_TIME:
-            rc = set_charge_time(operation_arg);
+        {
+            rc = cape_charge_time(operation_arg);
             break;
+        }
+        case OP_POWER_DOWN:
+        {
+            rc = cape_power_down(operation_arg);
+            break;
+        }
+        case OP_POWER_ON:
+        {
+            rc = cape_power_on(operation_arg);
+            break;
+        }
         default:
         case OP_NONE:
         {
