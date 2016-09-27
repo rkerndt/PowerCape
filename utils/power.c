@@ -147,7 +147,7 @@ int main( int argc, char *argv[] )
 
     if (cape_initialize(CAPE_I2C_BUS, AVR_ADDRESS) < 0)
     {
-        exit(1)
+        exit(1);
     }
 
     switch ( operation )
