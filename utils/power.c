@@ -38,7 +38,7 @@ void show_usage( char *progname )
     fprintf( stderr, "      -cn --charge n      Set charge rate where n= 1, 2, or 3\n");
     fprintf( stderr, "      -tn --charge-time n Set charge time where n = 3-10 hours\n");
     fprintf( stderr, "      -pn --power-down n  Power down after n seconds where n=0-255");
-    fprintf( stderr, "      -Pn --power-on n    Power on after n seconds where n=0-22047555 (~255 days)")
+    fprintf( stderr, "      -Pn --power-on n    Power on after n seconds where n=0-22047555 (~255 days)");
     exit( 1 );
 }
 
@@ -156,7 +156,7 @@ void parse( int argc, char *argv[] )
             {
                 operation = OP_POWER_ON;
                 operation_arg = atoi(optarg);
-                if ((opweration_arg < POWER_ON_MIN_SEC) || (operation_arg > POWER_DOWN_MAX_SEC))
+                if ((operation_arg < POWER_ON_MIN_SEC) || (operation_arg > POWER_DOWN_MAX_SEC))
                 {
                     operation = OP_NONE;
                     show_usage(argv[0]);

@@ -370,7 +370,7 @@ int cape_charge_rate(unsigned char rate)
          (rate == CHARGE_RATE_MED) ||
          (rate == CHARGE_RATE_HIGH))
      {
-         rc = register_write(REG_I2C_ICHARGE, &rate);
+         rc = register_write(REG_I2C_ICHARGE, rate);
      }
      else
      {
@@ -385,7 +385,7 @@ int cape_charge_time(unsigned char time)
     int rc = 0;
     if ((time >= CHARGE_RATE_LOW) && (time <= CHARGE_TIME_MAX))
     {
-        rc = register_read(REG_I2C_TCHARGE, &time);
+        rc = register_read(REG_I2C_TCHARGE, time);
     }
     else
     {
@@ -399,7 +399,7 @@ int cape_power_down(unsigned char seconds)
     int rc = 0;
     if ((seconds >= POWER_DOWN_MIN_SEC) && (seconds <= POWER_DOWN_MAX_SEC))
     {
-        rc = register_write(REG_WDT_STOP, &seconds);
+        rc = register_write(REG_WDT_STOP, seconds);
     }
     else
     {
@@ -418,14 +418,14 @@ int cape_power_on(int seconds)
         unsigned char min = (unsigned char) (seconds % 3600) / 60;
         unsigned char sec = (unsigned char) (seconds % 60);
 
-        rc = register_write(REG_RESTART_HOURS, &hour);
+        rc = register_write(REG_RESTART_HOURS, hour);
         if (rc != -1)
         {
-            rc = register_write(REG_RESTART_MINUTES, &min);
+            rc = register_write(REG_RESTART_MINUTES, min);
         }
         if (rc != -1)
         {
-            rc = register_write(REG_RESTART_SECONDS, &sec);
+            rc = register_write(REG_RESTART_SECONDS, sec);
         }
     }
     else
