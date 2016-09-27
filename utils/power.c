@@ -37,8 +37,8 @@ void show_usage( char *progname )
     fprintf( stderr, "      -w --write          Write cape RTC from system time.\n" );
     fprintf( stderr, "      -cn --charge n      Set charge rate where n= 1, 2, or 3\n");
     fprintf( stderr, "      -tn --charge-time n Set charge time where n = 3-10 hours\n");
-    fprintf( stderr, "      -pn --power-down n  Power down after n seconds where n=0-255");
-    fprintf( stderr, "      -Pn --power-on n    Power on after n seconds where n=0-22047555 (~255 days)");
+    fprintf( stderr, "      -pn --power-down n  Power down after n seconds where n=0-255\n");
+    fprintf( stderr, "      -Pn --power-on n    Power on after n seconds where n=0-22047555 (~255 days)\n");
     exit( 1 );
 }
 
