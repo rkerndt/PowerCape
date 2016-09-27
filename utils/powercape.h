@@ -38,12 +38,12 @@
 #define CAPE_FAIL           0x02
 #define CAPE_ERROR          0x03
 
-#define POWER_DOWN_DEFAULT_SEC 1
-#define POWER_DOWN_MIN_SEC     1
-#define POWER_DOWN_MAX_SEC     255
+#define POWER_DOWN_DEFAULT_SEC 0x01
+#define POWER_DOWN_MIN_SEC     0x01
+#define POWER_DOWN_MAX_SEC     0xFF
 
-#define POWER_ON_MIN_SEC       0
-#define POWER_ON_MAX_SEC       22047555
+#define POWER_ON_MIN_SEC       0x00
+#define POWER_ON_MAX_SEC       0x21A453
 
 // structure to hold data fields needed by powercape routines
 typedef struct _powercape {
