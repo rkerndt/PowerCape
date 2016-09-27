@@ -14,11 +14,13 @@ void msleep( int msecs )
 int i2c_read( void *buf, int len )
 {
     int rc = 0;
+    pc.status = CAPE_OK;
 
     if ( read( pc.handle, buf, len ) != len )
     {
         fprintf(stderr, "I2C read failed: %s\n", strerror( errno ) );
         rc = -1;
+        pc.status = CAPE_ERROR;
     }
 
     return rc;
@@ -28,11 +30,13 @@ int i2c_read( void *buf, int len )
 int i2c_write( void *buf, int len )
 {
     int rc = 0;
-    
+    pc.status = CAPE_OK;
+
     if ( write( pc.handle, buf, len ) != len )
     {
         fprintf(stderr, "I2C write failed: %s\n", strerror( errno ) );
         rc = -1;
+        pc.status = CAPE_ERROR;
     }
     
     return rc;
