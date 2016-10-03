@@ -127,7 +127,7 @@ int cape_initialize(int i2c_bus, int avr_address)
     pc.handle = open(filename, O_RDWR);
     if (pc.handle == -1)
     {
-        fprintf(stderr, "Failed to open %s: (%d) %s", filename, errno, strerror(errno));
+        fprintf(stderr, "Failed to open %s: (%d) %s\n", filename, errno, strerror(errno));
         rc = -1;
         pc.status = CAPE_FAIL;
     }
@@ -149,7 +149,7 @@ int cape_close(void)
         rc = close(pc.handle);
         if (rc == -1)
         {
-            fprintf(stderr, "Error closing handler: (%d) %s", errno, strerror(errno));
+            fprintf(stderr, "Error closing handler: (%d) %s\n", errno, strerror(errno));
         }
     }
     return rc;
