@@ -63,7 +63,7 @@ void parse( int argc, char *argv[] )
         };
         int c;
 
-        c = getopt_long( argc, argv, "ihbqrswc:t:p::P:", lopts, NULL );
+        c = getopt_long( argc, argv, "ihbqrswc:t:p:P:", lopts, NULL );
 
         if( c == -1 )
             break;
@@ -137,18 +137,11 @@ void parse( int argc, char *argv[] )
             case 'p':
             {
                 operation = OP_POWER_DOWN;
-                if (optarg != NULL)
+                operation_arg = atoi(optarg);
+                if ((operation_arg < POWER_DOWN_MIN_SEC) || (operation_arg > POWER_DOWN_MAX_SEC))
                 {
-                    operation_arg = atoi(optarg);
-                    if ((operation_arg < POWER_DOWN_MIN_SEC) || (operation_arg > POWER_DOWN_MAX_SEC))
-                    {
-                        operation = OP_NONE;
-                        show_usage(argv[0]);
-                    }
-                }
-                else
-                {
-                    operation_arg = POWER_DOWN_DEFAULT_SEC;
+                    operation = OP_NONE;
+                    show_usage(argv[0]);
                 }
                 break;
             }
